@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/jpg" href="favicon.webp">
+    <meta charset="UTF-8">
+    <title>Kayıt Ol - Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo">
+                <a href="index.html" class="logo">
+                    <img src="favicon.webp" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı
+            </div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Ana Sayfa</a></li>
+                    <li><a href="send.html">Gönderi Oluştur</a></li>
+                    <li><a href="track.html">Gönderi Takip</a></li>
+                    <li><a href="courier.html">Kurye Ol</a></li>
+                    <li><a href="login.html" style="color: var(--orange); font-weight: 600;">Giriş Yap</a></li>
+                </ul>
+                <a href="send.html" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Aramıza Katıl</h1>
+                <p>Hızlıca hesap oluştur, gönderilerini kolayca yönet.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container login-layout">
+                <form class="main-form">
+                    <h2>Kayıt Formu</h2>
+                    
+                    <div class="form-grid">
+                        <label>
+                            Ad Soyad
+                            <input type="text" placeholder="Adın ve soyadın" required>
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" placeholder="05XX XXX XX XX" required>
+                        </label>
+                    </div>
+
+                    <label>
+                        E-posta Adresi
+                        <input type="email" placeholder="ornek@email.com" required>
+                    </label>
+
+                    <div class="form-grid">
+                        <label>
+                            Şifre
+                            <input type="password" placeholder="********" required>
+                        </label>
+                        <label>
+                            Şifre Tekrar
+                            <input type="password" placeholder="********" required>
+                        </label>
+                    </div>
+
+                    <div class="form-extras">
+                        <label class="checkbox-label">
+                            <input type="checkbox" required style="width: auto; margin-top:0;"> 
+                            <span style="font-size: 0.85rem;">Üyelik sözleşmesini okudum ve kabul ediyorum.</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-block">Hesap Oluştur</button>
+
+                    <div class="form-footer">
+                        Zaten hesabın var mı? <a href="login.html">Giriş Yap</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <div class="logo footer-logo">Kapı Kapı</div>
+                <p>Şehir içi günlük kargo ve kurye platformu.</p>
+            </div>
+            <div>
+                <h4>Bağlantılar</h4>
+                <ul class="footer-links">
+                    <li><a href="send.html">Gönderi Oluştur</a></li>
+                    <li><a href="track.html">Gönderi Takip</a></li>
+                    <li><a href="courier.html">Kurye Ol</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>İletişim</h4>
+                <p>E-posta: info@kapikapi.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı. Tüm hakları saklıdır.
+        </div>
+    </footer>
+</body>
+
+</html>

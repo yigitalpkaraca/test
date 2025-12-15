@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/jpg" href="favicon.webp">
+    <meta charset="UTF-8">
+    <title>Kapı Kapı </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kapı Kapı ile şehir içi aynı gün kargo ve kurye hizmeti.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+
+            <div class="logo"> <a href="index.html" class="logo">
+                    <img src="favicon.webp" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı</div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="active">Ana Sayfa</a></li>
+                    <li><a href="send.html">Gönderi Oluştur</a></li>
+                    <li><a href="track.html">Gönderi Takip</a></li>
+                    <li><a href="courier.html">Kurye Ol</a></li>
+                    <li><a href="login.html" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
+</ul>
+                </ul>
+                <a href="send.html" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero-grid">
+                <div class="hero-text">
+                    <p class="tagline">Şehir içi günlük kargo</p>
+                    <h1>Paketini <span>aynı gün</span> yerine ulaştır.</h1>
+                    <p class="hero-desc">
+                        Kapı Kapı ile şehir içindeki gönderilerini dakikalar içinde kurye çağırarak güvenle teslim
+                        edebilirsin.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="send.html" class="btn">Gönderi Oluştur</a>
+                        <a href="courier.html" class="btn btn-outline">Kurye Ol</a>
+                    </div>
+                    <div class="hero-meta">
+                        <span> Aynı gün teslim</span>
+                        <span> Aynı şehir içinde</span>
+                        <span> Gerçek kuryelerle</span>
+                    </div>
+                </div>
+
+                <div class="hero-card">
+                    <h2>Hızlı Gönderi</h2>
+                    <form class="mini-form">
+                        <label>
+                            Çıkış Adresi
+                            <input type="text" placeholder="Örn: Konak, İzmir">
+                        </label>
+                        <label>
+                            Varış Adresi
+                            <input type="text" placeholder="Örn: Karşıyaka, İzmir">
+                        </label>
+                        <label>
+                            Paket Boyutu
+                            <select>
+                                <option>Küçük (Belge, zarf)</option>
+                                <option>Orta (Kutu, hediye)</option>
+                                <option>Büyük (Çanta, koli)</option>
+                            </select>
+                        </label>
+                        <button type="button" class="btn btn-block">Tahmini Ücret Göster</button>
+                        <p class="mini-form-note"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+        <section class="steps">
+            <div class="container">
+                <h2>Nasıl Çalışır?</h2>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-badge">1</div>
+                        <h3>Adresleri Gir</h3>
+                        <p>Gönderici ve alıcı adreslerini, paket bilgisini kolayca formdan doldur.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-badge">2</div>
+                        <h3>Kurye Paketi Alsın</h3>
+                        <p>Yakındaki kuryeler talebini görür ve biri görevi üzerine alır.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-badge">3</div>
+                        <h3>Aynı Gün Teslim</h3>
+                        <p>Paketin, şehir içinde saatler içinde güvenle teslim edilir.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="features">
+            <div class="container">
+                <h2>Neden Kapı Kapı?</h2>
+                <div class="features-grid">
+                    <article class="feature-card">
+                        <h3>Hızlı Teslimat</h3>
+                        <p>Geleneksel kargoya göre çok daha hızlı, aynı gün içinde teslimat deneyimi.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Şeffaf Süreç</h3>
+                        <p>Gönderinin durumunu takip sayfasından her adımda görebilirsin.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Esnek Kurye Ağı</h3>
+                        <p>Kuryeler için ek gelir imkanı, kullanıcılar için daha hızlı hizmet.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <section class="cta">
+            <div class="container cta-inner">
+                <div>
+                    <h2>Şimdi bir gönderi oluştur.</h2>
+                    <p>Şehrin içinde acil göndermen gereken bir paket mi var? Kapı Kapı yanında.</p>
+                </div>
+                <a href="send.html" class="btn btn-light">Gönderi Oluştur</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <div class="logo footer-logo">Kapı Kapı</div>
+                <p>Şehir içi günlük kargo ve kurye platformu.</p>
+            </div>
+            <div>
+                <h4>Bağlantılar</h4>
+                <ul class="footer-links">
+                    <li><a href="send.html">Gönderi Oluştur</a></li>
+                    <li><a href="track.html">Gönderi Takip</a></li>
+                    <li><a href="courier.html">Kurye Ol</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>İletişim</h4>
+                <p>E-posta: info@kapıkapı.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Kapı apı. Tüm hakları saklıdır.
+        </div>
+    </footer>
+</body>
+
+</html>

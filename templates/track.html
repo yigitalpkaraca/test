@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/jpg" href="favicon.webp">
+    <meta charset="UTF-8">
+    <title>Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo"> <a href="index.html" class="logo">
+                    <img src="favicon.webp" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı</div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="index.html">Ana Sayfa</a></li>
+                    <li><a href="send.html">Gönderi Oluştur</a></li>
+                    <li><a href="track.html" class="active">Gönderi Takip</a></li>
+                    <li><a href="courier.html">Kurye Ol</a></li>
+                </ul>
+                <a href="send.html" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Gönderi Takip</h1>
+                <p>Takip numaranı girerek gönderinin durumunu görüntüleyebilirsin.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container track-layout">
+                <form class="main-form">
+                    <label>
+                        Takip Numarası
+                        <input type="text" placeholder="Örn: KT-2025-12345">
+                    </label>
+                    <button type="button" class="btn btn-block">Durumu Göster</button>
+                    <p class="form-note">
+                    </p>
+                </form>
+
+                <div class="status-box">
+                    <h2>Örnek Durum Akışı</h2>
+                    <div class="status-steps">
+                        <div class="status-step done">
+                            <div class="dot"></div>
+                            <div>
+                                <h3>Gönderi Oluşturuldu</h3>
+                                <p>Gönderi bilgilerin alındı.</p>
+                            </div>
+                        </div>
+                        <div class="status-step done">
+                            <div class="dot"></div>
+                            <div>
+                                <h3>Kurye Yolda</h3>
+                                <p>Kurye, paketi teslim almak için çıkış adresine gidiyor.</p>
+                            </div>
+                        </div>
+                        <div class="status-step current">
+                            <div class="dot"></div>
+                            <div>
+                                <h3>Paket Yolda</h3>
+                                <p>Paketin alıcı adresine doğru yolda.</p>
+                            </div>
+                        </div>
+                        <div class="status-step">
+                            <div class="dot"></div>
+                            <div>
+                                <h3>Teslim Edildi</h3>
+                                <p>Paket alıcıya başarıyla teslim edildi.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="small"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı.
+        </div>
+    </footer>
+</body>
+
+</html>
