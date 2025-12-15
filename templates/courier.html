@@ -2,7 +2,7 @@
 <html lang="tr">
 
 <head>
-    <link rel="icon" type="image/jpg" href="favicon.webp">
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}">
     <meta charset="UTF-8">
     <title>Kapı Kapı</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
     <header class="main-header">
         <div class="container nav">
             <div class="logo"> <a href="index.html" class="logo">
-                    <img src="favicon.webp" alt="kutu kutu logo" class="logo-img">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
                 </a>Kapı Kapı</div>
             <nav class="nav-right">
                 <ul class="nav-links">
