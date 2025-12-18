@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}">
+    <meta charset="UTF-8">
+    <title>Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo"> <a href="index.html" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı</div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+    
+                    {% if session.get('user_name') %}
+                        <li style=" font-weight: 700;">Hoş geldin, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('logout') }}" >Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                        <li><a href="{{ url_for('courier') }}">Kurye Ol</a></li>
+                        <li><a href="{{ url_for('login') }}" >Giriş Yap</a></li>
+                    {% endif %}
+</ul>
+</ul>
+                </ul>
+                <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Kurye Ol</h1>
+                <p>Kapı Kapı kuryesi olarak şehir içinde ek gelir kazan.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container courier-layout">
+                <form class="main-form">
+                    <h2>Kurye Başvuru Formu</h2>
+                    <div class="form-grid">
+                        <label>
+                            İsim Soyisim
+                            <input type="text" placeholder="Adın ve soyadın">
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" placeholder="05XX XXX XX XX">
+                        </label>
+                    </div>
+                    <div class="form-grid">
+                        <label>
+                            Şehir
+                            <input type="text" placeholder="Örn: İzmir">
+                        </label>
+                        <label>
+                            Araç Türü
+                            <select>
+                                <option>Motosiklet</option>
+                                <option>Bisiklet</option>
+                                <option>Araba</option>
+                                <option>Yaya</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label>
+                        Deneyim
+                        <textarea rows="3" placeholder="Kurye veya sürüş deneyiminden kısaca bahset."></textarea>
+                    </label>
+                    <button type="submit" class="btn btn-block">Başvuruyu Gönder</button>
+                    <p class="form-note"></p>
+                </form>
+
+                <div class="courier-jobs">
+                    <h2>Örnek Aktif Gönderiler</h2>
+                    <div class="job-card">
+                        <div class="job-main">
+                            <h3>Gönderi #KT-2025-001</h3>
+                            <p><strong>Alım:</strong> Bornova, İzmir</p>
+                            <p><strong>Teslim:</strong> Karşıyaka, İzmir</p>
+                        </div>
+                        <div class="job-side">
+                            <p class="job-price">~80₺</p>
+                            <button class="btn btn-small">Kabul Et</button>
+                        </div>
+                    </div>
+
+                    <div class="job-card">
+                        <div class="job-main">
+                            <h3>Gönderi #KT-2025-002</h3>
+                            <p><strong>Alım:</strong> Konak, İzmir</p>
+                            <p><strong>Teslim:</strong> Buca, İzmir</p>
+                        </div>
+                        <div class="job-side">
+                            <p class="job-price">~65₺</p>
+                            <button class="btn btn-small">Kabul Et</button>
+                        </div>
+                    </div>
+
+                    <div class="job-card">
+                        <div class="job-main">
+                            <h3>Gönderi #KT-2025-003</h3>
+                            <p><strong>Alım:</strong> Çankaya, Ankara</p>
+                            <p><strong>Teslim:</strong> Etimesgut, Ankara</p>
+                        </div>
+                        <div class="job-side">
+                            <p class="job-price">~120₺</p>
+                            <button class="btn btn-small">Kabul Et</button>
+                        </div>
+                    </div>
+
+                    <p class="small">
+
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı.
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}">
+    <meta charset="UTF-8">
+    <title>Giriş Yap - Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo">
+                <a href="{{ url_for('home') }}" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="Kapı Kapı logo" class="logo-img">
+                </a>
+                Kapı Kapı
+            </div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+
+                    {% if session.get('user_name') %}
+                        <li style="color: #0dbf87; font-weight: 700;">Hoş geldin, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('logout') }}" style="color: #ff7a1a;">Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                        <li><a href="{{ url_for('courier') }}">Kurye Ol</a></li>
+                        <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
+                    {% endif %}
+                </ul>
+                <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Üye Girişi</h1>
+                <p>Hesabına giriş yaparak gönderilerini ve kazançlarını yönet.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container login-layout">
+                <form class="main-form" method="POST" action="{{ url_for('login') }}">
+                    <h2>Hoş Geldin</h2>
+                    
+                    <label>
+                        E-posta Adresi
+                        <input type="email" name="email" placeholder="ornek@email.com" required>
+                    </label>
+
+                    <label>
+                        Şifre
+                        <input type="password" name="password" placeholder="********" required>
+                    </label>
+
+                    <div class="form-extras">
+                        <label class="checkbox-label">
+                            <input type="checkbox" style="width: auto; margin-top:0;"> Beni Hatırla
+                        </label>
+                        <a href="#" class="forgot-link">Şifremi Unuttum</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-block">Giriş Yap</button>
+
+                    <div class="form-footer">
+                        Hesabın yok mu? <a href="{{ url_for('register') }}">Hemen Kayıt Ol</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <div class="logo footer-logo">Kapı Kapı</div>
+                <p>Şehir içi günlük kargo ve kurye platformu.</p>
+            </div>
+            <div>
+                <h4>Bağlantılar</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+                    <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                    <li><a href="{{ url_for('courier') }}">Kurye Ol</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>İletişim</h4>
+                <p>E-posta: info@kapikapi.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı. Tüm hakları saklıdır.
+        </div>
+    </footer>
+</body>
+
+</html>

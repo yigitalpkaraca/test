@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Profili Düzenle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo">
+                <a href="{{ url_for('home') }}" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
+                </a>
+                Kapı Kapı
+            </div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+                    <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                    {% if session.get('user_name') %}
+                        <li >Hoş geldiniz, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('profile') }}">Profilim</a></li>
+                        <li><a href="{{ url_for('logout') }}" >Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}" >Giriş Yap</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="profile-edit-section">
+            <div class="container">
+                <h2>Profili Düzenle</h2>
+
+                <form action="{{ url_for('edit_profile') }}" method="POST">
+                    <label for="fullname">Ad Soyad</label>
+                    <input type="text" id="fullname" name="fullname" value="{{ user.fullname }}" required>
+
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required>
+
+                    <label for="phone">Telefon</label>
+                    <input type="text" id="phone" name="phone" value="{{ user.phone }}" required>
+
+                    {% if session['user_type'] == 'kurye' %}
+                        <label for="plate">Araç Plakası</label>
+                        <input type="text" id="plate" name="plate" value="{{ session['plate'] }}">
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-block">Profili Güncelle</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container
