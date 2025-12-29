@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}">
+    <meta charset="UTF-8">
+    <title>Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo"> <a href="index.html" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı
+
+            </div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+    
+                    {% if session.get('user_name') %}
+                        <li style="color: #0dbf87; font-weight: 700;">Hoş geldin, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('logout') }}" style="color: #ff7a1a;">Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                        <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
+                    {% endif %}
+                    {% if session.get('user_type') == 'kurye' %}
+                        <li><a href="{{ url_for('courier') }}">Gönderi Kabul</a></li>
+                    {% endif %}
+</ul>
+                </ul>
+                <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Gönderi Oluştur</h1>
+                <p>Şehir içi paketini göndermek için formu doldur.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container form-layout">
+                <form class="main-form">
+                    <h2>Gönderici Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            İsim Soyisim
+                            <input type="text" placeholder="Gönderici adı">
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" placeholder="05XX XXX XX XX">
+                        </label>
+                    </div>
+                    <label>
+                        Adres
+                        <input type="text" placeholder="Mahalle, sokak, bina, daire">
+                    </label>
+
+                    <h2>Alıcı Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            İsim Soyisim
+                            <input type="text" placeholder="Alıcı adı">
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" placeholder="05XX XXX XX XX">
+                        </label>
+                    </div>
+                    <label>
+                        Adres
+                        <input type="text" placeholder="Mahalle, sokak, bina, daire">
+                    </label>
+
+                    <h2>Paket Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            Paket Boyutu
+                            <select>
+                                <option>Küçük</option>
+                                <option>Orta</option>
+                                <option>Büyük</option>
+                            </select>
+                        </label>
+                        <label>
+                            Tahmini Ağırlık (kg)
+                            <input type="number" step="0.1" placeholder="Örn: 1.5">
+                        </label>
+                    </div>
+
+                    <label>
+                        Not (isteğe bağlı)
+                        <textarea rows="3" placeholder="Kurye için özel not yazabilirsin."></textarea>
+                    </label>
+
+                    <button type="submit" class="btn btn-block">Gönderiyi Oluştur</button>
+                    <p class="form-note">
+                    </p>
+                </form>
+
+                <aside class="side-box">
+                    <h3>Tahmini Ücret</h3>
+                    <p>Gerçek bir sistemde, adresler ve mesafe bilgisine göre burada tahmini ücret gösterilir.</p>
+                    <ul class="fake-price-list">
+                        <li>0–5 km: ~50₺</li>
+                        <li>5–10 km: ~80₺</li>
+                        <li>10–20 km: ~120₺</li>
+                    </ul>
+                    <p class="small"></p>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı.
+        </div>
+    </footer>
+</body>
+
+</html>
