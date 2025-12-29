@@ -31,6 +31,11 @@
                         <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
                     {% endif %}
                 </ul>
+                {% if session.get('user_type') == 'kurye' %}
+                    <a href="{{ url_for('courier') }}" class="btn btn-small">Hemen Gönder</a>
+                {% else %}
+                    <a href="{{ url_for('home') }}" class="btn btn-small">Hemen Gönder</a>
+                {% endif %}
             </nav>
         </div>
     </header>
