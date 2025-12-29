@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, render_template, request, session, flash
+from flask import Flask, redirect, url_for, render_template, request, session, flash, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 from werkzeug.utils import secure_filename
@@ -6,18 +6,17 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # ------------------- Config -------------------
-app.secret_key = 'kapikapi123'  # Session için secret key
+app.secret_key = 'kapikapi123'
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Fotoğraf uzantılarının geçerli olup olmadığını kontrol eden fonksiyon
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# ------------------- Kullanıcı Bilgileri -------------------
-# Bu örnekte, veritabanı kullanılmıyor ve kullanıcı bilgileri session'da saklanıyor.
+# ------------------- Veriler -------------------
 users = {}
+messages = [] # Mesajlar burada saklanıyor
 
 @app.route("/")
 def home():
@@ -27,6 +26,37 @@ def home():
 def send():
     return render_template('send.html')
 
+# ------------------- Sohbet (Chat) -------------------
+@app.route('/chat', methods=['GET', 'POST'])
+def chat():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    if request.method == 'POST':
+        msg_text = request.form.get('message')
+        if msg_text:
+            new_msg = {
+                'sender': session['user_name'],
+                'text': msg_text,
+                'type': session.get('user_type', 'customer')
+            }
+            messages.append(new_msg)
+            
+        # Eğer istek JavaScript (AJAX) ile gelmişse, sadece "OK" döndür
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+             return "OK", 200 
+        
+        # Normal form gönderimi ise sayfayı yenile
+        return redirect(url_for('chat'))
+
+    return render_template('chat.html', messages=messages)
+
+# JavaScript'in 3 saniyede bir yeni mesajları çektiği yer
+@app.route('/get_messages')
+def get_messages():
+    return jsonify({"messages": messages})
+
+# ------------------- Diğer Rotalar -------------------
 @app.route("/takip")
 def track():
     return render_template('track.html')
@@ -41,23 +71,18 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         sifre = request.form['password']
-
-        # Kullanıcıyı email ile bul
         user = users.get(email)
 
-        # Eğer kullanıcı yoksa veya şifre yanlışsa
         if not user or not check_password_hash(user['password'], sifre):
             return "Email veya şifre yanlış", 400
 
-        # Kullanıcıyı oturumda tanımla
         session['user_id'] = email
         session['user_name'] = user['fullname']
         session['email'] = email
         session['phone'] = user['phone']
-        session['user_type'] = user['user_type']  # Kullanıcı tipini session'a kaydet
-        session['profile_image'] = user.get('profile_image', 'static/uploads/default.jpg')  # Fotoğraf bilgisi
+        session['user_type'] = user['user_type']
+        session['profile_image'] = user.get('profile_image', 'static/uploads/default.jpg')
         
-        # Giriş başarılıysa, kullanıcıyı profile sayfasına yönlendir
         return redirect(url_for('profile'))
 
     return render_template('login.html')
@@ -87,27 +112,18 @@ def register():
                 profile_image = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(profile_image)
            
-        # Eğer kullanıcı kurye ise, plaka alanını kontrol et
         if user_type == 'kurye' and not plate:
             flash('Araç plakasını girmelisiniz!', 'error')
             return redirect(url_for('register'))
 
-        
-        # Fotoğrafı kaydet (session'a)
-        session['profile_image'] = profile_image or 'static/uploads/default.jpg'
-
-        # Şifrelerin eşleşip eşleşmediğini kontrol et
         if sifre != sifre_tekrar:
             return "Şifreler eşleşmiyor", 400
 
-        # Eğer kullanıcı daha önce kayıt olmuşsa, hata mesajı göster
         if email in users:
             return "Bu email zaten kayıtlı", 400
 
-        # Şifreyi hash'le
         hashed_password = generate_password_hash(sifre, method='pbkdf2:sha256')
 
-        # Yeni kullanıcıyı kaydet (veritabanı yerine sadece `users` dictionary'sine)
         users[email] = {
             'fullname': ad,
             'email': email,
@@ -115,48 +131,44 @@ def register():
             'phone': tel,
             'user_type': user_type,
             'profile_image': profile_image,
-            'user_plate': plate  # Plaka bilgisi
+            'user_plate': plate
         }
 
-        # Kullanıcı bilgilerini session'a kaydet
         session['user_id'] = email
         session['user_name'] = ad
         session['email'] = email
         session['phone'] = tel
         session['user_type'] = user_type   
-        session['user_plate'] = plate if user_type == 'kurye' else None  # Kurye ise plaka bilgisi kaydedilir
+        session['user_plate'] = plate if user_type == 'kurye' else None
 
         return redirect(url_for('login'))  
 
     return render_template('register.html')
 
+# ------------------- Profile -------------------
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
-        return redirect(url_for('login'))  # Eğer giriş yapılmamışsa login sayfasına yönlendir
+        return redirect(url_for('login'))
 
-    # Kullanıcı bilgilerini session'dan al
     user = {
         'user_name': session.get('user_name', 'Ziyaretçi'),
         'user_email': session.get('email', 'email@domain.com'),
         'user_phone': session.get('phone', '0000000000'),
         'user_image': session.get('profile_image', 'static/uploads/default.jpg'),
-        'user_plate': session.get('user_plate', ''),  # Plaka bilgisi session'dan alınıyor
+        'user_plate': session.get('user_plate', ''),
     }
 
-    # Kullanıcı tipi kontrolü
-    user_type = session.get('user_type', 'customer')  # 'customer' veya 'courier' olabilir
+    user_type = session.get('user_type', 'customer')
 
-    # Geçmiş siparişler
     past_orders = session.get('past_orders', [
-        {"id": 1, "date": "2025-11-15", "status": "Teslim Edilecek"},  # Müşteri için teslim edilecek
-        {"id": 2, "date": "2025-12-01", "status": "Teslim Edilecek"}   # Müşteri için teslim edilecek
+        {"id": 1, "date": "2025-11-15", "status": "Teslim Edilecek"},
+        {"id": 2, "date": "2025-12-01", "status": "Teslim Edilecek"}
     ])
 
-    # Eğer kullanıcı kurye ise, sipariş durumunu 'Teslim Edilecek' olarak değiştir
     if user_type == 'kurye':
         for order in past_orders:
-            order['status'] = "Teslimatlar"  # Kurye için teslimatlar başlığı
+            order['status'] = "Teslimatlar"
 
     return render_template('profile.html', user=user, past_orders=past_orders, user_type=user_type)
 
@@ -164,29 +176,24 @@ def profile():
 @app.route("/edit_profile", methods=['GET', 'POST'])
 def edit_profile():
     if 'user_id' not in session:
-        # Eğer kullanıcı giriş yapmamışsa login sayfasına yönlendir
         return redirect(url_for('login'))
 
-    user_id = session['user_id']
     user = {
         'fullname': session.get('user_name', 'Ziyaretçi'),
         'email': session.get('email', 'email@domain.com'),
         'phone': session.get('phone', '0000000000'),
-        'profile_image': session.get('profile_image', 'static/uploads/default.jpg')  # Varsayılan profil fotoğrafı
-    }  # 'user' verisi olarak session'dan alınan bilgilerle bir sözlük oluşturuyoruz
+        'profile_image': session.get('profile_image', 'static/uploads/default.jpg')
+    }
 
     if request.method == "POST":
-        # Formdan gelen verilerle kullanıcıyı güncelle
         user['fullname'] = request.form['fullname']
         user['email'] = request.form['email']
         user['phone'] = request.form['phone']
         
-        # Güncellenen bilgileri session'a kaydedin
         session['user_name'] = user['fullname']
         session['email'] = user['email']
         session['phone'] = user['phone']
         
-        # Fotoğraf değiştirildiyse, yeni fotoğrafı kaydedin
         if 'profile_image' in request.files:
             file = request.files['profile_image']
             if file.filename != '' and allowed_file(file.filename):
@@ -194,13 +201,12 @@ def edit_profile():
                 profile_image = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(profile_image)
                 user['profile_image'] = profile_image
-                session['profile_image'] = profile_image  # Fotoğrafı session'a kaydedin
+                session['profile_image'] = profile_image
 
-        return redirect(url_for('profile'))  # Profil sayfasına yönlendir
+        return redirect(url_for('profile'))
 
-    return render_template('edit_profile.html', user=user)  # 'user' verisini şablona gönder
+    return render_template('edit_profile.html', user=user)
 
 
-# ------------------- Main -------------------
 if __name__ == "__main__":
     app.run(debug=True)

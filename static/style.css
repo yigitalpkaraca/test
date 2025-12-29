@@ -666,7 +666,6 @@ textarea {
 .form-footer a:hover {
     text-decoration: underline;
 }
-=======
 /* Genel ayarlar */
 *,
 *::before,
@@ -1344,6 +1343,66 @@ textarea {
         margin-top: 1rem;
     }
 }
+/* Sohbet Konteynırı */
+.chat-container {
+    background: var(--white);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Dışarı taşmaları engelle */
+    max-width: 800px;
+    margin: 2rem auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
 
+/* Mesaj Alanı (Kritik Yer!) */
+.messages-area {
+    height: 500px;         /* Yükseklik sabitlendi */
+    overflow-y: auto;      /* Mesaj çoksa kaydırma çubuğu çıkar */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #fcfcfc;
+}
 
->>>>>>> main:style.css
+/* Mesaj Balonları */
+.message {
+    max-width: 75%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background-color: var(--orange);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.message.received {
+    align-self: flex-start;
+    background-color: #e9e9eb;
+    color: #222;
+    border-bottom-left-radius: 2px;
+}
+
+/* Giriş Alanı */
+.chat-input-area {
+    padding: 15px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    background: var(--white);
+}
+
+.chat-input-area input {
+    flex: 1;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 8px;
+}
+

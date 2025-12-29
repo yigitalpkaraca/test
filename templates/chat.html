@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kapı Kapı | Sohbet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Chat'e özel ek yükseklik ve kaydırma ayarları (style.css'de yoksa burası kurtarır) */
+        .messages-area {
+            height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background-color: #fcfcfc;
+        }
+        .chat-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 1rem;
+            border: 1px solid #e2e2ea;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="{{ url_for('home') }}" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="Logo" class="logo-img">
+                    <span class="logo-text">Kapı Kapı</span>
+                </a>
+                <div class="nav-right">
+                    <ul class="nav-links">
+                        <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                        <li><a href="{{ url_for('profile') }}">Profilim</a></li>
+                        <li><a href="{{ url_for('logout') }}">Çıkış Yap</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container page-main">
+        <div class="chat-container">
+            <div class="chat-header" style="padding: 15px 20px; background: #f0f0f0; border-bottom: 1px solid #ddd; font-weight: bold; color: var(--orange);">
+                Destek Ekibi / Kurye ile Sohbet
+            </div>
+            
+            <div class="messages-area" id="chatWindow">
+                {% if not messages %}
+                    <p id="no-msg-temp" style="text-align: center; color: #999; margin-top: 20px;">Henüz mesaj yok. İlk mesajı siz gönderin!</p>
+                {% else %}
+                    {% for msg in messages %}
+                        <div class="message {% if msg.sender == session['user_name'] %}sent{% else %}received{% endif %}">
+                            <small style="font-size: 0.7rem; display: block; opacity: 0.8;">{{ msg.sender }}</small>
+                            {{ msg.text }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <form id="chatForm" class="chat-input-area" onsubmit="sendMessage(event)">
+                <input type="text" id="userInput" placeholder="Mesajınızı yazın..." required autocomplete="off">
+                <button type="submit" class="btn">Gönder</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">© 2025 Kapı Kapı. Tüm hakları saklıdır.</div>
+    </footer>
+
+    <script>
+        const currentUser = "{{ session['user_name'] }}";
+
+        // Mesaj kutusunu otomatik en aşağı kaydırır
+        function scrollToBottom() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            const chatWindow = document.getElementById('chatWindow');
+
+            if (message !== "") {
+                // Manuel temizlik (Henüz mesaj yok yazısını siler)
+                const tempMsg = document.getElementById('no-msg-temp');
+                if(tempMsg) tempMsg.remove();
+
+                // 1. Optimistik Güncelleme: Ekrana anında bas
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message sent';
+                msgDiv.innerHTML = `<small style="font-size: 0.7rem; display: block; opacity: 0.8;">${currentUser}</small>${message}`;
+                chatWindow.appendChild(msgDiv);
+                scrollToBottom();
+
+                // 2. Arka planda sunucuya gönder
+                fetch('/chat', {
+                    method: 'POST',
+                    body: new URLSearchParams({'message': message}),
+                    headers: { 
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    }
+                });
+
+                input.value = "";
+            }
+        }
+
+        function loadMessages() {
+            fetch('/get_messages')
+                .then(response => response.json())
+                .then(data => {
+                    const chatWindow = document.getElementById('chatWindow');
+                    // Kullanıcı yukarıyı okuyorsa otomatik kaydırmayı durdurmak için kontrol
+                    const isAtBottom = chatWindow.scrollHeight - chatWindow.scrollTop <= chatWindow.clientHeight + 100;
+
+                    chatWindow.innerHTML = ""; 
+                    if(data.messages.length === 0) {
+                        chatWindow.innerHTML = '<p style="text-align: center; color: #999; margin-top: 20px;">Henüz mesaj yok.</p>';
+                    }
+
+                    data.messages.forEach(msg => {
+                        const msgDiv = document.createElement('div');
+                        const isMe = msg.sender === currentUser;
+                        msgDiv.className = `message ${isMe ? 'sent' : 'received'}`;
+                        msgDiv.innerHTML = `<small style="font-size: 0.7rem; display: block; opacity: 0.8;">${msg.sender}</small>${msg.text}`;
+                        chatWindow.appendChild(msgDiv);
+                    });
+                    
+                    if (isAtBottom) {
+                        scrollToBottom();
+                    }
+                });
+        }
+
+        // 3 saniyede bir yeni mesajları kontrol et
+        setInterval(loadMessages, 3000);
+        
+        // Sayfa açıldığında en aşağı git
+        window.onload = scrollToBottom;
+    </script>
+</body>
+</html>

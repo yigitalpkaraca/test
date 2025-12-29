@@ -195,10 +195,12 @@
     
     <header class="header">
         <div class="container">
-            <div class="logo">
-                <img src="{{ url_for('static', filename='favicon.webp') }}" alt="Kapı Kapı logo">
-                Kapı Kapı
-            </div>
+            <a href="{{ url_for('home') }}" style="text-decoration: none; color: white;">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="Kapı Kapı logo">
+                    Kapı Kapı
+                </div>
+            </a>    
         </div>
     </header>
 

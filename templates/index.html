@@ -18,11 +18,11 @@
                 </a>Kapı Kapı</div>
             <nav class="nav-right">
                 <ul class="nav-links">
+                    <li >Hoş geldiniz, {{ session['user_name'] }}</li>
+                    <li><a href="{{ url_for('home') }}">Profil</a></li>
                     <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
                     <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
                     {% if session .get('user_name') %}
-                        <li >Hoş geldiniz, {{ session['user_name'] }}</li>
-                        <li><a href="{{ url_for('home') }}">Profil</a></li>
                         <li><a href="{{ url_for('logout') }}" >Çıkış Yap</a></li>
                     {% else %}
                         <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
