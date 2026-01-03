@@ -166,11 +166,17 @@
                                                 </div>
                                             {% endif %}
                                         </div>
-                                        <div class="order-status">
-                                            {% if user_type == 'kurye' %}
-                                                <span class="status-badge status-pending">Teslim Edilecek</span>
-                                            {% else %}
+                                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                                            <div class="order-status">
                                                 <span class="status-badge status-{{ order.status|lower|replace(' ', '-') }}">{{ order.status }}</span>
+                                            </div>
+                                            {% if order.tracking_number %}
+                                                <div class="chat-button-wrapper" data-tracking="{{ order.tracking_number }}">
+                                                    <button class="btn-chat-profile" onclick="openChat('{{ order.tracking_number }}', this)" title="Kurye ile mesajlaş">
+                                                        💬 Mesajlaş
+                                                    </button>
+                                                    <span class="message-badge" style="display: none;">0</span>
+                                                </div>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -401,8 +407,9 @@
         }
 
         .order-item:hover {
-            transform: translateX(5px);
+            transform: translateX(3px);
             border-color: var(--orange);
+            background: linear-gradient(135deg, #f0f8f5 0%, var(--bg) 100%);
         }
 
         .order-main {
@@ -487,11 +494,140 @@
             font-size: 0.95rem;
         }
 
+        .chat-button-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-chat-profile {
+            background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(13, 191, 135, 0.3);
+            white-space: nowrap;
+        }
+
+        .btn-chat-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(13, 191, 135, 0.4);
+            background: linear-gradient(135deg, var(--green-dark) 0%, #087a56 100%);
+        }
+
+        .message-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: var(--white);
+            border-radius: 50%;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0 6px;
+            box-shadow: 0 2px 8px rgba(255, 122, 26, 0.4);
+            border: 2px solid var(--white);
+        }
+
+
         @media (max-width: 900px) {
             .profile-wrapper {
                 grid-template-columns: 1fr;
             }
         }
     </style>
+
+    <script>
+        // Mesaj sayılarını yükle (okunmamış mesaj sayısı)
+        async function loadMessageCounts() {
+            const chatButtons = document.querySelectorAll('.chat-button-wrapper');
+            
+            for (const wrapper of chatButtons) {
+                const trackingNumber = wrapper.getAttribute('data-tracking');
+                const badge = wrapper.querySelector('.message-badge');
+                
+                if (trackingNumber && badge) {
+                    try {
+                        const response = await fetch(`/api/chat/count/${trackingNumber}`);
+                        const result = await response.json();
+                        
+                        if (result.success && result.count > 0) {
+                            badge.textContent = '+' + result.count;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    } catch (error) {
+                        console.error('Mesaj sayısı yüklenirken hata:', error);
+                    }
+                }
+            }
+        }
+
+        async function openChat(trackingNumber, buttonElement) {
+            // Loading state
+            if (buttonElement) {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '⏳ Yükleniyor...';
+                
+                try {
+                    // Tracking number'a göre shipment'ı bul
+                    const response = await fetch(`/api/shipments/track/${trackingNumber}`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.shipment) {
+                        // Chat sayfasına yönlendir
+                        window.location.href = `/chat/${result.shipment.id}`;
+                    } else {
+                        alert('Gönderi bulunamadı veya chat yetkiniz yok. Kurye henüz gönderiyi kabul etmemiş olabilir.');
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Hata:', error);
+                    alert('Chat sayfası açılırken bir hata oluştu. Lütfen tekrar deneyin.');
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.disabled = false;
+                }
+            } else {
+                // Fallback - button element yoksa
+                try {
+                    const response = await fetch(`/api/shipments/track/${trackingNumber}`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.shipment) {
+                        window.location.href = `/chat/${result.shipment.id}`;
+                    } else {
+                        alert('Gönderi bulunamadı veya chat yetkiniz yok.');
+                    }
+                } catch (error) {
+                    console.error('Hata:', error);
+                    alert('Chat sayfası açılırken bir hata oluştu.');
+                }
+            }
+        }
+
+        // Sayfa yüklendiğinde mesaj sayılarını yükle
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMessageCounts();
+            
+            // Her 10 saniyede bir mesaj sayılarını yenile
+            setInterval(loadMessageCounts, 10000);
+        });
+    </script>
 </body>
 </html>

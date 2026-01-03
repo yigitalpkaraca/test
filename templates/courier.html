@@ -184,6 +184,21 @@
             transform: translateY(-2px);
         }
 
+        .btn-deliver {
+            flex: 1;
+            background: linear-gradient(135deg, var(--orange) 0%, #ff8c42 100%);
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 15px rgba(255, 122, 26, 0.3);
+        }
+
+        .btn-deliver:hover {
+            background: linear-gradient(135deg, #ff8c42 0%, #ff7a1a 100%);
+            box-shadow: 0 6px 20px rgba(255, 122, 26, 0.4);
+            transform: translateY(-2px);
+        }
+
         .no-shipments {
             text-align: center;
             padding: 4rem 2rem;
@@ -255,6 +270,8 @@
                         shipmentsList.style.display = 'block';
                         noShipments.style.display = 'none';
                         shipmentsList.innerHTML = result.shipments.map(shipment => createShipmentCard(shipment)).join('');
+                        // Mesaj sayılarını yükle
+                        loadPendingMessageCounts();
                     }
                 } else {
                     shipmentsList.innerHTML = `<div class="error-message">${result.message}</div>`;
@@ -262,6 +279,26 @@
             } catch (error) {
                 console.error('Hata:', error);
                 shipmentsList.innerHTML = '<div class="error-message">Gönderiler yüklenirken bir hata oluştu.</div>';
+            }
+        }
+
+        // Bekleyen gönderiler için mesaj sayılarını yükle
+        async function loadPendingMessageCounts() {
+            const badges = document.querySelectorAll('.message-badge-pending');
+            for (const badge of badges) {
+                const shipmentId = badge.id.replace('badge-pending-', '');
+                try {
+                    const response = await fetch(`${API_BASE}/chat/unread/${shipmentId}`);
+                    const result = await response.json();
+                    if (result.success && result.count > 0) {
+                        badge.textContent = result.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Mesaj sayısı yüklenirken hata:', error);
+                }
             }
         }
 
@@ -317,8 +354,14 @@
                         </div>
                     ` : ''}
                     
-                    <div class="shipment-actions">
-                        <button class="btn btn-accept" onclick="acceptShipment('${shipment.id}')">
+                    <div class="shipment-actions" style="display: flex; gap: 0.75rem; position: relative;">
+                        <div style="position: relative; flex: 1;">
+                            <a href="/chat/${shipment.id}" class="btn btn-chat-courier" style="width: 100%; background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%); text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                💬 Mesaj Gönder
+                            </a>
+                            <span class="message-badge-pending" id="badge-pending-${shipment.id}" style="display: none; position: absolute; top: -8px; right: -8px; background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); color: var(--white); border-radius: 50%; min-width: 24px; height: 24px; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; padding: 0 6px; box-shadow: 0 2px 8px rgba(255, 122, 26, 0.4); border: 2px solid var(--white);">0</span>
+                        </div>
+                        <button class="btn btn-accept" onclick="acceptShipment('${shipment.id}')" style="flex: 1;">
                             ✓ Gönderiyi Kabul Et
                         </button>
                     </div>
@@ -391,6 +434,8 @@
                         acceptedList.style.display = 'block';
                         noAcceptedShipments.style.display = 'none';
                         acceptedList.innerHTML = result.shipments.map(shipment => createAcceptedShipmentCard(shipment)).join('');
+                        // Mesaj sayılarını yükle
+                        loadAcceptedMessageCounts();
                     }
                 } else {
                     acceptedList.innerHTML = `<div class="error-message">${result.message}</div>`;
@@ -398,6 +443,26 @@
             } catch (error) {
                 console.error('Hata:', error);
                 acceptedList.innerHTML = '<div class="error-message">Gönderiler yüklenirken bir hata oluştu.</div>';
+            }
+        }
+
+        // Kabul edilen gönderiler için mesaj sayılarını yükle
+        async function loadAcceptedMessageCounts() {
+            const badges = document.querySelectorAll('.message-badge-accepted');
+            for (const badge of badges) {
+                const shipmentId = badge.id.replace('badge-accepted-', '');
+                try {
+                    const response = await fetch(`${API_BASE}/chat/unread/${shipmentId}`);
+                    const result = await response.json();
+                    if (result.success && result.count > 0) {
+                        badge.textContent = result.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Mesaj sayısı yüklenirken hata:', error);
+                }
             }
         }
 
@@ -464,6 +529,18 @@
                             <li>Paketi teslim edin</li>
                         </ol>
                     </div>
+                    
+                    <div class="shipment-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; position: relative;">
+                        <div style="position: relative; flex: 1;">
+                            <a href="/chat/${shipment.id}" class="btn btn-chat" style="width: 100%; background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%); text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                💬 Mesajlaş
+                            </a>
+                            <span class="message-badge-accepted" id="badge-accepted-${shipment.id}" style="display: none; position: absolute; top: -8px; right: -8px; background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); color: var(--white); border-radius: 50%; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; padding: 0 6px; box-shadow: 0 2px 8px rgba(255, 122, 26, 0.4); border: 2px solid var(--white);">0</span>
+                        </div>
+                        <button class="btn btn-deliver" onclick="deliverShipment('${shipment.id}')" style="flex: 1;">
+                            ✓ Sipariş Teslim Edildi
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -525,6 +602,53 @@
             }
         }
 
+        // Gönderiyi teslim et
+        async function deliverShipment(shipmentId) {
+            if (!confirm('Bu gönderiyi teslim ettiğinizden emin misiniz?')) {
+                return;
+            }
+            
+            const card = document.querySelector(`[data-id="${shipmentId}"]`);
+            const deliverBtn = card.querySelector('.btn-deliver');
+            
+            deliverBtn.disabled = true;
+            deliverBtn.textContent = 'Teslim ediliyor...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/shipments/${shipmentId}/deliver`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Başarı mesajı göster
+                    card.innerHTML = `
+                        <div class="success-message">
+                            ✅ Gönderi başarıyla teslim edildi! Takip numarası: ${result.shipment.tracking_number}
+                        </div>
+                    `;
+                    
+                    // Kabul edilen gönderileri yenile
+                    setTimeout(() => {
+                        loadAcceptedShipments();
+                    }, 1000);
+                } else {
+                    alert(result.message);
+                    deliverBtn.disabled = false;
+                    deliverBtn.textContent = '✓ Sipariş Teslim Edildi';
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                alert('Gönderi teslim edilirken bir hata oluştu.');
+                deliverBtn.disabled = false;
+                deliverBtn.textContent = '✓ Sipariş Teslim Edildi';
+            }
+        }
+
         // Sayfa yüklendiğinde gönderileri yükle
         window.addEventListener('DOMContentLoaded', () => {
             loadShipments();
@@ -536,6 +660,12 @@
             loadShipments();
             loadAcceptedShipments();
         }, 30000);
+
+        // Mesaj sayılarını periyodik olarak yenile (10 saniyede bir)
+        setInterval(() => {
+            loadPendingMessageCounts();
+            loadAcceptedMessageCounts();
+        }, 10000);
     </script>
 </body>
 

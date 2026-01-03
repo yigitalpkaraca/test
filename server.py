@@ -26,6 +26,15 @@ users = {}
 shipments = {}
 shipment_counter = 0
 
+# ------------------- Mesajlaşma -------------------
+# Mesajlaşma için veri yapısı (shipment_id bazında)
+# Format: {shipment_id: [{"id": uuid, "sender_id": email, "sender_name": name, "message": text, "timestamp": iso}, ...]}
+messages = {}
+
+# Kullanıcıların son okuduğu mesaj sayısı (okunmamış mesaj sayısı için)
+# Format: {shipment_id: {user_id: last_read_count}}
+last_read_messages = {}
+
 @app.route("/")
 def home():
     return render_template('index.html')
@@ -75,6 +84,57 @@ def courier():
     if session.get('user_type') != 'kurye':
         return redirect(url_for('home'))
     return render_template('courier.html')
+
+@app.route("/chat/<shipment_id>")
+def chat(shipment_id):
+    # Giriş kontrolü
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    # Gönderiyi bul
+    shipment = shipments.get(shipment_id)
+    if not shipment:
+        flash('Gönderi bulunamadı.', 'error')
+        return redirect(url_for('profile'))
+    
+    # Yetki kontrolü - sadece gönderici veya kurye erişebilir
+    user_id = session['user_id']
+    user_type = session.get('user_type')
+    
+    # Gönderici kontrolü - müşteri her zaman kendi gönderilerine erişebilir
+    is_sender = shipment.get('sender_email') == user_id
+    # Kurye kontrolü - kurye pending gönderilere de erişebilir (kabul etmeden önce)
+    # veya kabul ettiği gönderilere erişebilir
+    is_courier = (user_type == 'kurye' and 
+                  (shipment.get('status') == 'pending' or 
+                   shipment.get('courier_id') == user_id))
+    
+    if not (is_sender or is_courier):
+        flash('Bu sohbete erişim yetkiniz yok.', 'error')
+        return redirect(url_for('profile'))
+    
+    # Karşı tarafın bilgilerini belirle
+    if is_sender:
+        # Müşteri ise, kurye bilgilerini göster (kurye henüz kabul etmediyse "Kurye atanmadı")
+        courier_name = shipment.get('courier_name') or 'Kurye atanmadı'
+        other_party = {
+            'name': courier_name,
+            'type': 'kurye'
+        }
+    else:
+        # Kurye ise, gönderici bilgilerini göster
+        sender_email = shipment.get('sender_email')
+        sender_user = users.get(sender_email, {})
+        sender_name = sender_user.get('fullname') or shipment.get('sender_name') or 'Gönderici'
+        other_party = {
+            'name': sender_name,
+            'type': 'musteri'
+        }
+    
+    return render_template('chat.html', 
+                         shipment=shipment, 
+                         shipment_id=shipment_id,
+                         other_party=other_party)
 
 # ------------------- Login -------------------
 @app.route('/login', methods=['GET', 'POST'])
@@ -198,17 +258,68 @@ def profile():
 
     # Kullanıcı tipi kontrolü
     user_type = session.get('user_type', 'musteri')  # 'musteri' veya 'kurye' olabilir
+    user_id = session.get('user_id')
 
-    # Geçmiş siparişler
-    past_orders = session.get('past_orders', [
-        {"id": 1, "date": "2025-11-15", "status": "Teslim Edilecek"},  # Müşteri için teslim edilecek
-        {"id": 2, "date": "2025-12-01", "status": "Teslim Edilecek"}   # Müşteri için teslim edilecek
-    ])
-
-    # Eğer kullanıcı kurye ise, sipariş durumunu 'Teslim Edilecek' olarak değiştir
+    # Geçmiş siparişler - shipments dictionary'sinden gerçek zamanlı veri al
+    past_orders = []
+    
     if user_type == 'kurye':
-        for order in past_orders:
-            order['status'] = "Teslimatlar"  # Kurye için teslimatlar başlığı
+        # Kurye için kabul ettiği gönderiler
+        for shipment_id, shipment in shipments.items():
+            if shipment.get('courier_id') == user_id:
+                # Status'u Türkçe'ye çevir
+                status_map = {
+                    'pending': 'Beklemede',
+                    'accepted': 'Teslim Edilecek',
+                    'delivered': 'Teslim Edildi'
+                }
+                status = status_map.get(shipment.get('status', 'pending'), 'Beklemede')
+                
+                order = {
+                    "id": int(shipment.get('tracking_number', '0').split('-')[-1]) if shipment.get('tracking_number') else 0,
+                    "date": shipment.get('created_at', datetime.now().isoformat())[:10] if shipment.get('created_at') else datetime.now().strftime("%Y-%m-%d"),
+                    "status": status,
+                    "tracking_number": shipment.get('tracking_number'),
+                    "price": shipment.get('price', 0),
+                    "details": {
+                        "sender": shipment.get('sender_name', ''),
+                        "receiver": shipment.get('receiver_name', ''),
+                        "package": shipment.get('package_size', ''),
+                        "sender_address": shipment.get('sender_address', ''),
+                        "receiver_address": shipment.get('receiver_address', '')
+                    }
+                }
+                past_orders.append(order)
+    else:
+        # Müşteri için kendi gönderileri
+        for shipment_id, shipment in shipments.items():
+            if shipment.get('sender_email') == user_id:
+                # Status'u Türkçe'ye çevir
+                status_map = {
+                    'pending': 'Beklemede',
+                    'accepted': 'Kabul Edildi',
+                    'delivered': 'Teslim Edildi'
+                }
+                status = status_map.get(shipment.get('status', 'pending'), 'Beklemede')
+                
+                order = {
+                    "id": int(shipment.get('tracking_number', '0').split('-')[-1]) if shipment.get('tracking_number') else 0,
+                    "date": shipment.get('created_at', datetime.now().isoformat())[:10] if shipment.get('created_at') else datetime.now().strftime("%Y-%m-%d"),
+                    "status": status,
+                    "tracking_number": shipment.get('tracking_number'),
+                    "price": shipment.get('price', 0),
+                    "details": {
+                        "sender": shipment.get('sender_name', ''),
+                        "receiver": shipment.get('receiver_name', ''),
+                        "package": shipment.get('package_size', ''),
+                        "sender_address": shipment.get('sender_address', ''),
+                        "receiver_address": shipment.get('receiver_address', '')
+                    }
+                }
+                past_orders.append(order)
+    
+    # Tarihe göre sırala (en yeni üstte)
+    past_orders.sort(key=lambda x: x.get('date', ''), reverse=True)
 
     return render_template('profile.html', user=user, past_orders=past_orders, user_type=user_type)
 
@@ -448,6 +559,299 @@ def get_accepted_shipments():
         return jsonify({
             'success': True,
             'shipments': accepted_shipments
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Gönderiyi teslim et
+@app.route('/api/shipments/<shipment_id>/deliver', methods=['POST'])
+def deliver_shipment(shipment_id):
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        # Kurye kontrolü
+        if session.get('user_type') != 'kurye':
+            return jsonify({'success': False, 'message': 'Bu işlem için kurye olmanız gerekiyor.'}), 403
+        
+        # Gönderiyi bul
+        shipment = shipments.get(shipment_id)
+        if not shipment:
+            return jsonify({'success': False, 'message': 'Gönderi bulunamadı.'}), 404
+        
+        # Gönderi durumu kontrolü
+        if shipment['status'] != 'accepted':
+            return jsonify({'success': False, 'message': 'Bu gönderi henüz kabul edilmemiş veya zaten teslim edilmiş.'}), 400
+        
+        # Kurye kontrolü - sadece kabul eden kurye teslim edebilir
+        if shipment.get('courier_id') != session['user_id']:
+            return jsonify({'success': False, 'message': 'Bu gönderiyi sadece kabul eden kurye teslim edebilir.'}), 403
+        
+        # Gönderiyi güncelle
+        shipment['status'] = 'delivered'
+        shipment['delivered_at'] = datetime.now().isoformat()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Gönderi başarıyla teslim edildi!',
+            'shipment': shipment
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ------------------- Chat/Mesajlaşma Endpoints -------------------
+
+# Mesaj gönder
+@app.route('/api/chat/<shipment_id>/send', methods=['POST'])
+def send_message(shipment_id):
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        # Gönderiyi bul
+        shipment = shipments.get(shipment_id)
+        if not shipment:
+            return jsonify({'success': False, 'message': 'Gönderi bulunamadı.'}), 404
+        
+        # Yetki kontrolü
+        user_id = session['user_id']
+        user_type = session.get('user_type')
+        # Gönderici kontrolü - müşteri her zaman kendi gönderilerine mesaj gönderebilir
+        is_sender = shipment.get('sender_email') == user_id
+        # Kurye kontrolü - kurye pending gönderilere de mesaj gönderebilir (kabul etmeden önce)
+        # veya kabul ettiği gönderilere mesaj gönderebilir
+        is_courier = (user_type == 'kurye' and 
+                      (shipment.get('status') == 'pending' or 
+                       shipment.get('courier_id') == user_id))
+        
+        if not (is_sender or is_courier):
+            return jsonify({'success': False, 'message': 'Bu sohbete mesaj gönderme yetkiniz yok.'}), 403
+        
+        data = request.get_json()
+        message_text = data.get('message', '').strip()
+        
+        if not message_text:
+            return jsonify({'success': False, 'message': 'Mesaj boş olamaz.'}), 400
+        
+        # Mesajı oluştur
+        message_id = str(uuid.uuid4())
+        new_message = {
+            'id': message_id,
+            'sender_id': user_id,
+            'sender_name': session.get('user_name', 'Kullanıcı'),
+            'message': message_text,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Mesajları sakla
+        if shipment_id not in messages:
+            messages[shipment_id] = []
+        messages[shipment_id].append(new_message)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Mesaj gönderildi.',
+            'message_data': new_message
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Mesajları getir
+@app.route('/api/chat/<shipment_id>/messages', methods=['GET'])
+def get_messages(shipment_id):
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        # Gönderiyi bul
+        shipment = shipments.get(shipment_id)
+        if not shipment:
+            return jsonify({'success': False, 'message': 'Gönderi bulunamadı.'}), 404
+        
+        # Yetki kontrolü
+        user_id = session['user_id']
+        user_type = session.get('user_type')
+        # Gönderici kontrolü - müşteri her zaman kendi gönderilerine erişebilir
+        is_sender = shipment.get('sender_email') == user_id
+        # Kurye kontrolü - kurye pending gönderilere de erişebilir (kabul etmeden önce)
+        # veya kabul ettiği gönderilere erişebilir
+        is_courier = (user_type == 'kurye' and 
+                      (shipment.get('status') == 'pending' or 
+                       shipment.get('courier_id') == user_id))
+        
+        if not (is_sender or is_courier):
+            return jsonify({'success': False, 'message': 'Bu sohbeti görüntüleme yetkiniz yok.'}), 403
+        
+        # Mesajları getir
+        chat_messages = messages.get(shipment_id, [])
+        
+        # Kullanıcının mesajları okuduğunu işaretle (okunmamış mesaj sayısı için)
+        if shipment_id not in last_read_messages:
+            last_read_messages[shipment_id] = {}
+        last_read_messages[shipment_id][user_id] = len(chat_messages)
+        
+        return jsonify({
+            'success': True,
+            'messages': chat_messages
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Kullanıcının chat listesini getir
+@app.route('/api/chat/list', methods=['GET'])
+def get_chat_list():
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        user_id = session['user_id']
+        user_type = session.get('user_type')
+        
+        chat_list = []
+        
+        # Kullanıcının gönderilerini bul
+        for shipment_id, shipment in shipments.items():
+            # Gönderici kontrolü - müşteri her zaman kendi gönderilerine erişebilir
+            is_sender = shipment.get('sender_email') == user_id
+            # Kurye kontrolü - kurye pending gönderilere de erişebilir (kabul etmeden önce)
+            # veya kabul ettiği gönderilere erişebilir
+            is_courier = (user_type == 'kurye' and 
+                          (shipment.get('status') == 'pending' or 
+                           shipment.get('courier_id') == user_id))
+            
+            if is_sender or is_courier:
+                # Son mesajı bul
+                chat_messages = messages.get(shipment_id, [])
+                last_message = chat_messages[-1] if chat_messages else None
+                
+                # Karşı tarafın bilgilerini belirle
+                if is_sender:
+                    other_name = shipment.get('courier_name', 'Kurye atanmadı')
+                else:
+                    sender_email = shipment.get('sender_email')
+                    sender_user = users.get(sender_email, {})
+                    other_name = sender_user.get('fullname', shipment.get('sender_name', 'Gönderici'))
+                
+                chat_list.append({
+                    'shipment_id': shipment_id,
+                    'tracking_number': shipment.get('tracking_number'),
+                    'other_party': other_name,
+                    'last_message': last_message,
+                    'status': shipment.get('status')
+                })
+        
+        # Son mesajı olan chat'leri en üste sırala
+        chat_list.sort(key=lambda x: x['last_message']['timestamp'] if x['last_message'] else '', reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'chats': chat_list
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Tracking number'a göre mesaj sayısını getir
+@app.route('/api/chat/count/<tracking_number>', methods=['GET'])
+def get_message_count(tracking_number):
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        user_id = session['user_id']
+        user_type = session.get('user_type')
+        
+        # Tracking number'a göre shipment'ı bul
+        shipment = None
+        shipment_id = None
+        for sid, s in shipments.items():
+            if s.get('tracking_number') == tracking_number:
+                shipment = s
+                shipment_id = sid
+                break
+        
+        if not shipment:
+            return jsonify({
+                'success': True,
+                'count': 0,
+                'has_access': False
+            })
+        
+        # Yetki kontrolü
+        # Gönderici kontrolü - müşteri her zaman kendi gönderilerine erişebilir
+        is_sender = shipment.get('sender_email') == user_id
+        # Kurye kontrolü - kurye pending gönderilere de erişebilir (kabul etmeden önce)
+        # veya kabul ettiği gönderilere erişebilir
+        is_courier = (user_type == 'kurye' and 
+                       (shipment.get('status') == 'pending' or 
+                        shipment.get('courier_id') == user_id))
+        
+        if not (is_sender or is_courier):
+            return jsonify({
+                'success': True,
+                'count': 0,
+                'has_access': False
+            })
+        
+        # Okunmamış mesaj sayısını hesapla
+        chat_messages = messages.get(shipment_id, [])
+        total_message_count = len(chat_messages)
+        
+        # Kullanıcının son okuduğu mesaj sayısını al
+        last_read_count = 0
+        if shipment_id in last_read_messages and user_id in last_read_messages[shipment_id]:
+            last_read_count = last_read_messages[shipment_id][user_id]
+        
+        # Okunmamış mesaj sayısı
+        unread_count = max(0, total_message_count - last_read_count)
+        
+        return jsonify({
+            'success': True,
+            'count': unread_count,
+            'total_count': total_message_count,
+            'has_access': True,
+            'shipment_id': shipment_id
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Shipment ID'ye göre okunmamış mesaj sayısını getir
+@app.route('/api/chat/unread/<shipment_id>', methods=['GET'])
+def get_unread_count(shipment_id):
+    try:
+        # Giriş kontrolü
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'message': 'Giriş yapmanız gerekiyor.'}), 401
+        
+        user_id = session['user_id']
+        
+        # Gönderiyi bul
+        shipment = shipments.get(shipment_id)
+        if not shipment:
+            return jsonify({
+                'success': True,
+                'count': 0
+            })
+        
+        # Okunmamış mesaj sayısını hesapla
+        chat_messages = messages.get(shipment_id, [])
+        total_message_count = len(chat_messages)
+        
+        # Kullanıcının son okuduğu mesaj sayısını al
+        last_read_count = 0
+        if shipment_id in last_read_messages and user_id in last_read_messages[shipment_id]:
+            last_read_count = last_read_messages[shipment_id][user_id]
+        
+        # Okunmamış mesaj sayısı
+        unread_count = max(0, total_message_count - last_read_count)
+        
+        return jsonify({
+            'success': True,
+            'count': unread_count
         })
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500

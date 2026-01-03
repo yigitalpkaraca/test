@@ -160,9 +160,8 @@
                 return;
             }
 
-            // Butonu devre dışı bırak
+            // Butonu devre dışı bırak (loading state'i kaldırıldı - hızlı geçiş için)
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Gönderiliyor...';
 
             try {
                 const response = await fetch('/api/shipments', {
@@ -177,6 +176,8 @@
 
                 if (result.success) {
                     showMessage(`✅ ${result.message}`, 'success');
+                    submitBtn.textContent = '✓ Gönderi Oluşturuldu';
+                    submitBtn.style.background = 'linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%)';
                     formNote.innerHTML = `
                         <div style="padding: 1.5rem; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 1rem; border: 2px solid var(--green); margin-top: 1rem;">
                             <h3 style="margin: 0 0 1rem 0; color: var(--green-dark); font-size: 1.1rem;">📦 Gönderi Oluşturuldu!</h3>
@@ -194,16 +195,15 @@
                         </div>
                     `;
                     form.reset();
+                    submitBtn.disabled = false;
                 } else {
                     showMessage(`❌ ${result.message}`, 'error');
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Gönderiyi Oluştur';
                 }
             } catch (error) {
                 console.error('Hata:', error);
                 showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Gönderiyi Oluştur';
             }
         });
 
