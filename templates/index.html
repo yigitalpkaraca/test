@@ -13,20 +13,26 @@
 <body>
     <header class="main-header">
         <div class="container nav">
-
-            <div class="logo"> <a href="index.html" class="logo">
+            <div class="logo"> <a href="{{ url_for('home') }}" class="logo">
                     <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
                 </a>Kapı Kapı</div>
             <nav class="nav-right">
                 <ul class="nav-links">
                     <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
-                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
                     <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
-                    <li><a href="{{ url_for('courier') }}">Kurye Ol</a></li>
-                    <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
-</ul>
+                    {% if session.get('user_name') %}
+                        <li style="color: #0dbf87; font-weight: 700;">Hoş geldiniz, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('profile') }}">Profilim</a></li>
+                        {% if session.get('user_type') == 'kurye' %}
+                            <li><a href="{{ url_for('courier') }}">Gönderi Kabul</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('logout') }}" >Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('login') }}">Giriş Yap</a></li>
+                    {% endif %}
                 </ul>
                 <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
+            </nav>
             </nav>
         </div>
     </header>
@@ -42,8 +48,11 @@
                         edebilirsin.
                     </p>
                     <div class="hero-actions">
-                        <a href="send.html" class="btn">Gönderi Oluştur</a>
-                        <a href="courier.html" class="btn btn-outline">Kurye Ol</a>
+                        {% if session.get('user_name') %}
+                            <a href="{{ url_for('send') }}" class="btn">Gönderi Oluştur</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn">Giriş Yap</a>
+                        {% endif %}
                     </div>
                     <div class="hero-meta">
                         <span> Aynı gün teslim</span>
@@ -121,10 +130,14 @@
         <section class="cta">
             <div class="container cta-inner">
                 <div>
-                    <h2>Şimdi bir gönderi oluştur.</h2>
-                    <p>Şehrin içinde acil göndermen gereken bir paket mi var? Kapı Kapı yanında.</p>
+                    <h2>Hemen başla.</h2>
+                    <p>Kapı Kapı ile şehir içi kargo hizmetinden faydalan.</p>
                 </div>
-                <a href="send.html" class="btn btn-light">Gönderi Oluştur</a>
+                {% if session.get('user_name') %}
+                    <a href="{{ url_for('send') }}" class="btn btn-light">Gönderi Oluştur</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-light">Giriş Yap</a>
+                {% endif %}
             </div>
         </section>
     </main>
@@ -138,9 +151,7 @@
             <div>
                 <h4>Bağlantılar</h4>
                 <ul class="footer-links">
-                    <li><a href="send.html">Gönderi Oluştur</a></li>
-                    <li><a href="track.html">Gönderi Takip</a></li>
-                    <li><a href="courier.html">Kurye Ol</a></li>
+                    <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
                 </ul>
             </div>
             <div>

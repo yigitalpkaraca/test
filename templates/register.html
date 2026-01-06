@@ -19,16 +19,19 @@
             </div>
             <nav class="nav-right">
                 <ul class="nav-links">
-                    <ul class="nav-links">
                     <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
-                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
-                    <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
-                    <li><a href="{{ url_for('courier') }}">Kurye Ol</a></li>
-                    <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
-</ul>
+                    {% if session.get('user_name') %}
+                        <li style="color: #0dbf87; font-weight: 700;">Hoş geldin, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('profile') }}">Profilim</a></li>
+                        {% if session.get('user_type') == 'kurye' %}
+                            <li><a href="{{ url_for('courier') }}">Gönderi Kabul</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('logout') }}" style="color: #ff7a1a;">Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                        <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
+                    {% endif %}
                 </ul>
-                <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
-                <a href="send.html" class="btn btn-small">Hemen Gönder</a>
             </nav>
         </div>
     </header>
@@ -43,35 +46,53 @@
 
         <section class="form-section">
             <div class="container login-layout">
-                <form class="main-form">
+                <form class="main-form" method="POST" action="{{ url_for('register') }}" enctype="multipart/form-data">
                     <h2>Kayıt Formu</h2>
-                    
+
                     <div class="form-grid">
                         <label>
                             Ad Soyad
-                            <input type="text" placeholder="Adın ve soyadın" required>
+                            <input type="text" name="fullname" placeholder="Adınız ve Soyadınız" required>
                         </label>
                         <label>
                             Telefon
-                            <input type="tel" placeholder="05XX XXX XX XX" required>
+                            <input type="tel" name="phone" placeholder="05XX XXX XX XX" required>
                         </label>
                     </div>
 
                     <label>
                         E-posta Adresi
-                        <input type="email" placeholder="ornek@email.com" required>
+                        <input type="email" name="email" placeholder="ornek@email.com" required>
                     </label>
 
                     <div class="form-grid">
                         <label>
                             Şifre
-                            <input type="password" placeholder="********" required>
+                            <input type="password" name="password" placeholder="********" required>
                         </label>
                         <label>
                             Şifre Tekrar
-                            <input type="password" placeholder="********" required>
+                            <input type="password" name="password_repeat" placeholder="********" required>
                         </label>
                     </div>
+
+                    <label>
+                        Kullanıcı Tipi
+                        <select name="user_type" id="user_type" required>
+                            <option value="musteri">Müşteri</option>
+                            <option value="kurye">Kurye</option>
+                        </select>
+                    </label>
+
+                    <!-- Kurye için Plaka Bilgisi -->
+                    <div id="plate-field" style="display: none;">
+                        <label for="plate">Araç Plakası:</label>
+                        <input type="text" name="plate" placeholder="Plakanızı girin" />
+                    </div>
+
+                    <!-- Profil Fotoğrafı Alanı (Her iki kullanıcı tipi için geçerli) -->
+                    <label>Profil Fotoğrafı (İsteğe bağlı):</label>
+                    <input type="file" name="profile_image" accept="image/*">
 
                     <div class="form-extras">
                         <label class="checkbox-label">
@@ -99,9 +120,10 @@
             <div>
                 <h4>Bağlantılar</h4>
                 <ul class="footer-links">
-                    <li><a href="send.html">Gönderi Oluştur</a></li>
-                    <li><a href="track.html">Gönderi Takip</a></li>
-                    <li><a href="courier.html">Kurye Ol</a></li>
+                    <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                    {% if session.get('user_name') %}
+                        <li><a href="{{ url_for('profile') }}">Profilim</a></li>
+                    {% endif %}
                 </ul>
             </div>
             <div>
@@ -113,6 +135,18 @@
             © 2025 Kapı Kapı. Tüm hakları saklıdır.
         </div>
     </footer>
+
+    <script>
+        // Kullanıcı tipi seçildiğinde plaka alanını göster ya da gizle
+        document.getElementById("user_type").addEventListener("change", function () {
+            var plateField = document.getElementById("plate-field");
+            if (this.value === "kurye") {
+                plateField.style.display = "block";
+            } else {
+                plateField.style.display = "none";
+            }
+        });
+    </script>
 </body>
 
 </html>
