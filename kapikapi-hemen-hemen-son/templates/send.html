@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <link rel="icon" type="image/webp" href="{{ url_for('static', filename='favicon.webp') }}">
+    <meta charset="UTF-8">
+    <title>Kapı Kapı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container nav">
+            <div class="logo"> <a href="{{ url_for('home') }}" class="logo">
+                    <img src="{{ url_for('static', filename='favicon.webp') }}" alt="kutu kutu logo" class="logo-img">
+                </a>Kapı Kapı
+
+            </div>
+            <nav class="nav-right">
+                <ul class="nav-links">
+                    <ul class="nav-links">
+                    <li><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                    <li><a href="{{ url_for('send') }}">Gönderi Oluştur</a></li>
+    
+                    {% if session.get('user_name') %}
+                        <li style="color: #0dbf87; font-weight: 700;">Hoş geldin, {{ session['user_name'] }}</li>
+                        <li><a href="{{ url_for('logout') }}" style="color: #ff7a1a;">Çıkış Yap</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('track') }}">Gönderi Takip</a></li>
+                        <li><a href="{{ url_for('login') }}" style="color: #ff7a1a; font-weight: 600;">Giriş Yap</a></li>
+                    {% endif %}
+                    {% if session.get('user_type') == 'kurye' %}
+                        <li><a href="{{ url_for('courier') }}">Gönderi Kabul</a></li>
+                    {% endif %}
+</ul>
+                </ul>
+                <a href="{{ url_for('send') }}" class="btn btn-small">Hemen Gönder</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-main">
+        <section class="page-header">
+            <div class="container">
+                <h1>Gönderi Oluştur</h1>
+                <p>Şehir içi paketini göndermek için formu doldur.</p>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="container form-layout">
+                <form class="main-form" id="shipmentForm">
+                    <div id="formMessage"></div>
+                    <h2>Gönderici Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            İsim Soyisim
+                            <input type="text" name="sender_name" id="sender_name" placeholder="Gönderici adı" required>
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" name="sender_phone" id="sender_phone" placeholder="05XX XXX XX XX" required>
+                        </label>
+                    </div>
+                    <label>
+                        Adres
+                        <input type="text" name="sender_address" id="sender_address" placeholder="Mahalle, sokak, bina, daire" required>
+                    </label>
+
+                    <h2>Alıcı Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            İsim Soyisim
+                            <input type="text" name="receiver_name" id="receiver_name" placeholder="Alıcı adı" required>
+                        </label>
+                        <label>
+                            Telefon
+                            <input type="tel" name="receiver_phone" id="receiver_phone" placeholder="05XX XXX XX XX" required>
+                        </label>
+                    </div>
+                    <label>
+                        Adres
+                        <input type="text" name="receiver_address" id="receiver_address" placeholder="Mahalle, sokak, bina, daire" required>
+                    </label>
+
+                    <h2>Paket Bilgileri</h2>
+                    <div class="form-grid">
+                        <label>
+                            Paket Boyutu
+                            <select name="package_size" id="package_size" required>
+                                <option value="">Seçiniz</option>
+                                <option value="Küçük">Küçük</option>
+                                <option value="Orta">Orta</option>
+                                <option value="Büyük">Büyük</option>
+                            </select>
+                        </label>
+                        <label>
+                            Tahmini Ağırlık (kg)
+                            <input type="number" name="package_weight" id="package_weight" step="0.1" min="0.1" placeholder="Örn: 1.5" required>
+                        </label>
+                    </div>
+
+                    <label>
+                        Not (isteğe bağlı)
+                        <textarea name="notes" id="notes" rows="3" placeholder="Kurye için özel not yazabilirsin."></textarea>
+                    </label>
+
+                    <button type="submit" class="btn btn-block" id="submitBtn">Gönderiyi Oluştur</button>
+                    <p class="form-note" id="formNote"></p>
+                </form>
+
+                <aside class="side-box">
+                    <h3>Tahmini Ücret</h3>
+                    <p>Gerçek bir sistemde, adresler ve mesafe bilgisine göre burada tahmini ücret gösterilir.</p>
+                    <ul class="fake-price-list">
+                        <li>0–5 km: ~50₺</li>
+                        <li>5–10 km: ~80₺</li>
+                        <li>10–20 km: ~120₺</li>
+                    </ul>
+                    <p class="small"></p>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            © 2025 Kapı Kapı.
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('shipmentForm');
+        const formMessage = document.getElementById('formMessage');
+        const formNote = document.getElementById('formNote');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Form verilerini topla
+            const formData = {
+                sender_name: document.getElementById('sender_name').value,
+                sender_phone: document.getElementById('sender_phone').value,
+                sender_address: document.getElementById('sender_address').value,
+                receiver_name: document.getElementById('receiver_name').value,
+                receiver_phone: document.getElementById('receiver_phone').value,
+                receiver_address: document.getElementById('receiver_address').value,
+                package_size: document.getElementById('package_size').value,
+                package_weight: parseFloat(document.getElementById('package_weight').value),
+                notes: document.getElementById('notes').value || ''
+            };
+
+            // Validasyon
+            if (!formData.sender_name || !formData.sender_phone || !formData.sender_address ||
+                !formData.receiver_name || !formData.receiver_phone || !formData.receiver_address ||
+                !formData.package_size || !formData.package_weight) {
+                showMessage('Lütfen tüm zorunlu alanları doldurun.', 'error');
+                return;
+            }
+
+            // Butonu devre dışı bırak (loading state'i kaldırıldı - hızlı geçiş için)
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/shipments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    submitBtn.textContent = '✓ Gönderi Oluşturuldu';
+                    submitBtn.style.background = 'linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%)';
+                    formNote.innerHTML = `
+                        <div style="padding: 1.5rem; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 1rem; border: 2px solid var(--green); margin-top: 1rem;">
+                            <h3 style="margin: 0 0 1rem 0; color: var(--green-dark); font-size: 1.1rem;">📦 Gönderi Oluşturuldu!</h3>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong style="color: var(--muted); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">Takip Numarası:</strong>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: var(--green-dark); letter-spacing: 1px;">${result.shipment.tracking_number}</div>
+                            </div>
+                            <div style="margin-bottom: 0.8rem;">
+                                <strong style="color: var(--muted); font-size: 0.9rem; display: block; margin-bottom: 0.3rem;">Tahmini Ücret:</strong>
+                                <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">${result.shipment.price}₺</div>
+                            </div>
+                            <div style="padding-top: 0.8rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                                <a href="/takip" style="color: var(--green-dark); font-weight: 600; text-decoration: underline;">🔍 Gönderiyi takip etmek için tıklayın</a>
+                            </div>
+                        </div>
+                    `;
+                    form.reset();
+                    submitBtn.disabled = false;
+                } else {
+                    showMessage(`❌ ${result.message}`, 'error');
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Hata:', error);
+                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showMessage(message, type) {
+            formMessage.innerHTML = `<div style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; ${
+                type === 'success' 
+                    ? 'background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;' 
+                    : 'background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'
+            }">${message}</div>`;
+            
+            // Mesajı kaydır
+            formMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+
+</html>
